@@ -1,0 +1,27 @@
+{
+  "name": "aero-coord-convert-cli",
+  "version": "1.0.0",
+  "description": "CLI tool for converting geographic coordinates between formats",
+  "main": "bin/aero-coord-convert.js",
+  "bin": {
+    "aero-coord-convert": "./bin/aero-coord-convert.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PrimeKoboDevlopement/aero-coord-convert-cli.git"
+  },
+  "keywords": [
+    "coordinates",
+    "CLI",
+    "DMS",
+    "decimal",
+    "navigation",
+    "aviation"
+  ],
+  "author": "Masaru Kitajima",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/PrimeKoboDevlopement/aero-coord-convert-cli/issues"
+  },
+  "homepage": "https://github.com/PrimeKoboDevlopement/aero-coord-convert-cli#readme"
+}
