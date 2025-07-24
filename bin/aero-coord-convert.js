@@ -1,4 +1,3 @@
-// File: bin/coord-convert.js
 #!/usr/bin/env node
 
 const readline = require('readline');
@@ -34,7 +33,7 @@ function parseDecimal(str) {
 }
 
 function parseDMS(str) {
-  const dmsRegex = /([\d.]+)°\s*([\d.]+)[′']\s*([\d.]+)[″"]?\s*([NSEW])/;
+  const dmsRegex = /(\d+)°\s*(\d+)[′']\s*([\d.]+)[″"]?\s*([NSEW])/;
   const match = str.match(dmsRegex);
   if (!match) throw new Error(`Invalid DMS: ${str}`);
   const [, deg, min, sec, dir] = match;
@@ -52,66 +51,44 @@ function parseCompactDMS(str) {
   return dec;
 }
 
-function showFormats() {
-  console.log(`\n有効な座標入力形式は以下のとおりです:\n`);
-  console.log(`  - DMS形式:        34° 01′ 59.740″ N`);
-  console.log(`  - Compact形式:    354555N`);
-  console.log(`  - 10進形式:       34.03104, -118.81083\n`);
-}
-
+// Format selector
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout
 });
 
-function askInput(prompt, handler) {
-  rl.question(prompt, input => {
-    if (input.trim().toLowerCase() === 'exit') return rl.close();
-    try {
-      handler(input);
-    } catch (err) {
-      console.log(`\n⚠️ エラー: ${err.message}`);
-      showFormats();
-      askInput(prompt, handler);
+rl.question("座標を入力してください（例：34° 01′ 59.740″ N、または 354555N、または 34.03,-118.81）:\n> ", input => {
+  let lat, lon;
+  try {
+    if (input.includes(',') && input.includes('.')) {
+      ({ lat, lon } = parseDecimal(input));
+    } else if (input.match(/[°′″]/)) {
+      lat = parseDMS(input);
+      rl.question("経度も同様にDMS形式で入力してください:\n> ", input2 => {
+        lon = parseDMS(input2);
+        askFormat(lat, lon);
+      });
+      return;
+    } else if (input.match(/^\d{6}[NS]/)) {
+      lat = parseCompactDMS(input);
+      rl.question("経度も同様にCompact形式で入力してください（例：1402308E）:\n> ", input2 => {
+        lon = parseCompactDMS(input2);
+        askFormat(lat, lon);
+      });
+      return;
+    } else {
+      throw new Error("形式が不明です。");
     }
-  });
-}
-
-console.log(`\n=== 座標変換ユーティリティ ===`);
-console.log(`"exit" と入力すると終了します。`);
-
-askInput("\n緯度を入力してください:
-> ", latInput => {
-  let lat;
-  if (latInput.includes(',') && latInput.includes('.')) {
-    ({ lat } = parseDecimal(latInput));
-    askInput("経度を入力してください:
-> ", lonInput => {
-      const { lon } = parseDecimal(latInput);
-      askFormat(lat, lon);
-    });
-  } else if (latInput.match(/[°′″]/)) {
-    lat = parseDMS(latInput);
-    askInput("経度をDMS形式で入力してください:
-> ", lonInput => {
-      const lon = parseDMS(lonInput);
-      askFormat(lat, lon);
-    });
-  } else if (latInput.match(/^\d{6}[NS]$/)) {
-    lat = parseCompactDMS(latInput);
-    askInput("経度をCompact形式で入力してください（例：1402308E）:
-> ", lonInput => {
-      const lon = parseCompactDMS(lonInput);
-      askFormat(lat, lon);
-    });
-  } else {
-    throw new Error("入力形式が不明です。");
+    askFormat(lat, lon);
+  } catch (e) {
+    console.error(e.message);
+    rl.close();
   }
 });
 
 function askFormat(lat, lon) {
-  rl.question("\nどの形式に変換しますか？（decimal/dms/compact/all）:
-> ", fmt => {
+  console.log(`\n入力された座標（10進）: ${lat}, ${lon}\n`);
+  rl.question("どの形式に変換しますか？（decimal/dms/compact/all）:\n> ", fmt => {
     fmt = fmt.trim().toLowerCase();
     switch (fmt) {
       case 'decimal':
